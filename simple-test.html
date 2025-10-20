@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單 API 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { background-color: #d4edda; border-left: 4px solid #28a745; }
+        .error { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+        .info { background-color: #d1ecf1; border-left: 4px solid #17a2b8; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 簡單 API 測試工具</h1>
+    
+    <div class="test-box">
+        <h3>測試 1: 基本連線</h3>
+        <p>測試是否能連接到您的 Google Apps Script</p>
+        <button onclick="testBasicConnection()">測試連線</button>
+        <div id="basicResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>測試 2: 檢查回應內容</h3>
+        <p>檢查 Google Apps Script 回傳的內容</p>
+        <button onclick="checkResponse()">檢查回應</button>
+        <div id="responseResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>測試 3: 檢查錯誤詳情</h3>
+        <p>獲取詳細的錯誤資訊</p>
+        <button onclick="checkErrorDetails()">檢查錯誤</button>
+        <div id="errorResult"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>測試 4: 手動測試</h3>
+        <p>請手動在瀏覽器中開啟以下連結：</p>
+        <div class="info">
+            <p><strong>主要頁面：</strong></p>
+            <a href="https://script.google.com/macros/s/AKfycbxc5tw0dB5l1bTjLj9f-ZE1wkJyqiA9otw5DdDJbVH3Z2Jj6_g43HS5uBzja1NeXJbf/exec" target="_blank">
+                https://script.google.com/macros/s/AKfycbxc5tw0dB5l1bTjLj9f-ZE1wkJyqiA9otw5DdDJbVH3Z2Jj6_g43HS5uBzja1NeXJbf/exec
+            </a>
+            <p><strong>API 端點：</strong></p>
+            <a href="https://script.google.com/macros/s/AKfycbxc5tw0dB5l1bTjLj9f-ZE1wkJyqiA9otw5DdDJbVH3Z2Jj6_g43HS5uBzja1NeXJbf/exec?action=getForm" target="_blank">
+                https://script.google.com/macros/s/AKfycbxc5tw0dB5l1bTjLj9f-ZE1wkJyqiA9otw5DdDJbVH3Z2Jj6_g43HS5uBzja1NeXJbf/exec?action=getForm
+            </a>
+        </div>
+        <p>請告訴我這兩個連結分別顯示什麼內容</p>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxc5tw0dB5l1bTjLj9f-ZE1wkJyqiA9otw5DdDJbVH3Z2Jj6_g43HS5uBzja1NeXJbf/exec';
+
+        async function testBasicConnection() {
+            const resultDiv = document.getElementById('basicResult');
+            resultDiv.innerHTML = '<div class="info">正在測試連線...</div>';
+
+            try {
+                console.log('開始測試連線到:', API_URL);
+                
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+
+                console.log('回應狀態:', response.status);
+                console.log('回應標頭:', Object.fromEntries(response.headers.entries()));
+
+                if (response.ok) {
+                    const text = await response.text();
+                    console.log('回應內容長度:', text.length);
+                    console.log('回應內容前200字:', text.substring(0, 200));
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ 連線成功！</p>
+                            <p>狀態碼: ${response.status}</p>
+                            <p>內容長度: ${text.length} 字元</p>
+                            <p>內容預覽: ${text.substring(0, 100)}...</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <p>❌ 連線失敗</p>
+                            <p>狀態碼: ${response.status}</p>
+                            <p>狀態文字: ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('連線錯誤:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p>❌ 連線錯誤</p>
+                        <p>錯誤類型: ${error.name}</p>
+                        <p>錯誤訊息: ${error.message}</p>
+                        <p>完整錯誤: ${error.toString()}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkResponse() {
+            const resultDiv = document.getElementById('responseResult');
+            resultDiv.innerHTML = '<div class="info">正在檢查回應內容...</div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                const text = await response.text();
+                
+                resultDiv.innerHTML = `
+                    <div class="info">
+                        <h4>回應詳情：</h4>
+                        <p><strong>狀態碼:</strong> ${response.status}</p>
+                        <p><strong>狀態文字:</strong> ${response.statusText}</p>
+                        <p><strong>內容類型:</strong> ${response.headers.get('content-type') || '未知'}</p>
+                        <p><strong>內容長度:</strong> ${text.length} 字元</p>
+                        <h4>完整內容：</h4>
+                        <pre>${text}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p>❌ 無法獲取回應</p>
+                        <p>錯誤: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkErrorDetails() {
+            const resultDiv = document.getElementById('errorResult');
+            resultDiv.innerHTML = '<div class="info">正在檢查錯誤詳情...</div>';
+
+            try {
+                // 測試不同的請求方式
+                const tests = [
+                    { name: '基本 GET', method: 'GET' },
+                    { name: 'POST 請求', method: 'POST' },
+                    { name: 'OPTIONS 請求', method: 'OPTIONS' }
+                ];
+
+                let results = [];
+
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(API_URL, {
+                            method: test.method,
+                            mode: 'cors'
+                        });
+                        results.push({
+                            name: test.name,
+                            success: true,
+                            status: response.status,
+                            statusText: response.statusText
+                        });
+                    } catch (error) {
+                        results.push({
+                            name: test.name,
+                            success: false,
+                            error: error.message
+                        });
+                    }
+                }
+
+                let html = '<h4>各種請求方式測試結果：</h4>';
+                results.forEach(result => {
+                    if (result.success) {
+                        html += `<p>✅ ${result.name}: 成功 (${result.status})</p>`;
+                    } else {
+                        html += `<p>❌ ${result.name}: ${result.error}</p>`;
+                    }
+                });
+
+                resultDiv.innerHTML = `<div class="info">${html}</div>`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p>❌ 錯誤檢查失敗</p>
+                        <p>錯誤: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 頁面載入時自動執行基本測試
+        window.addEventListener('load', function() {
+            console.log('頁面載入完成，開始自動測試');
+            testBasicConnection();
+        });
+    </script>
+</body>
+</html>
