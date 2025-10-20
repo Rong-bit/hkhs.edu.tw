@@ -401,8 +401,11 @@
     function createFormHTML() {
       const formContent = document.getElementById('form-content');
       
-      // 生成班級選項（每年級15班）
+      // 生成班級選項（每年級15班 + 教職同仁）
       const classOptions = [];
+      // 添加教職同仁選項
+      classOptions.push(`<option value="教職同仁">教職同仁</option>`);
+      // 添加各年級班級
       for (let grade = 1; grade <= 3; grade++) {
         for (let classNum = 1; classNum <= 15; classNum++) {
           const className = `${grade}年${classNum.toString().padStart(2, '0')}班`;
@@ -511,30 +514,33 @@
         </div>
 
         <div class="form-group">
-          <label>您是否服用流感抗病毒藥劑</label>
-          <select name="fluAntiviral">
+          <label class="required">流感抗病毒藥劑</label>
+          <select name="fluAntiviral" required>
             <option value="">請選擇</option>
-            <option value="是">是</option>
-            <option value="否">否</option>
+            <option value="無">無</option>
+            <option value="自費">自費</option>
+            <option value="公費">公費</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>您是否服用新冠抗病毒藥劑</label>
-          <select name="covidAntiviral">
+          <label class="required">新冠抗病毒藥劑</label>
+          <select name="covidAntiviral" required>
             <option value="">請選擇</option>
-            <option value="是">是</option>
-            <option value="否">否</option>
+            <option value="無">無</option>
+            <option value="自費">自費</option>
+            <option value="公費">公費</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>流感快篩</label>
-          <select name="fluTest">
+          <label class="required">流感快篩</label>
+          <select name="fluTest" required>
             <option value="">請選擇</option>
-            <option value="陽性">陽性</option>
+            <option value="陽性(A型)">陽性(A型)</option>
+            <option value="陽性(B型)">陽性(B型)</option>
             <option value="陰性">陰性</option>
-            <option value="未檢測">未檢測</option>
+            <option value="未檢驗">未檢驗</option>
           </select>
         </div>
 
@@ -584,13 +590,12 @@
         </div>
 
         <div class="form-group">
-          <label>活動能力</label>
-          <select name="activityLevel">
+          <label class="required">活動能力 </label>
+          <select name="activityLevel" required>
             <option value="">請選擇</option>
-            <option value="正常">正常</option>
-            <option value="輕微受限">輕微受限</option>
-            <option value="中度受限">中度受限</option>
-            <option value="嚴重受限">嚴重受限</option>
+            <option value="自行走動">1.自行走動</option>
+            <option value="依靠輪椅">2.依靠輪椅</option>
+            <option value="完全臥床">3.完全臥床</option>
           </select>
         </div>
 
@@ -716,7 +721,7 @@
 
     // 驗證表單
     function validateForm() {
-      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'contactHistory'];
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'contactHistory', 'activityLevel', 'fluTest', 'fluAntiviral', 'covidAntiviral'];
       let isValid = true;
       
       requiredFields.forEach(fieldName => {
