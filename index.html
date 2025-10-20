@@ -461,8 +461,6 @@
     <div class="button-container">
       <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitForm()">送出表單</button>
       <button type="button" class="btn btn-secondary" onclick="resetForm()">重設表單</button>
-      <button type="button" class="btn btn-secondary" onclick="testAPIConnection()">測試 API 連線</button>
-      <button type="button" class="btn btn-secondary" onclick="testSuccessMessage()">測試成功訊息</button>
     </div>
 
     <div class="success-message" id="successMessage" style="display: none;"></div>
@@ -499,57 +497,8 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('頁面載入完成，版本: 2025-10-20-v2');
       loadFormData();
-      // 測試 API 連線
-      testAPIConnection();
     });
 
-    // 測試 API 連線
-    async function testAPIConnection() {
-      try {
-        console.log('測試 API 連線...');
-        
-        // 測試簡單的 JSONP 連線
-        const testUrl = API_URL + '?callback=testCallback';
-        console.log('測試 URL:', testUrl);
-        
-        // 創建測試腳本
-        const script = document.createElement('script');
-        script.crossOrigin = 'anonymous';
-        
-        window.testCallback = function(result) {
-          console.log('API 連線測試成功:', result);
-          document.head.removeChild(script);
-          delete window.testCallback;
-          showSuccess('API 連線正常！');
-        };
-        
-        script.onerror = function(error) {
-          console.error('API 連線測試失敗:', error);
-          document.head.removeChild(script);
-          delete window.testCallback;
-          
-          // 嘗試使用 fetch 作為備用方案
-          console.log('嘗試使用 fetch 測試...');
-          fetch(API_URL + '?callback=test')
-            .then(response => response.text())
-            .then(data => {
-              console.log('Fetch 測試成功:', data);
-              showSuccess('API 連線正常（使用 fetch）！');
-            })
-            .catch(fetchError => {
-              console.error('Fetch 測試也失敗:', fetchError);
-              showError('API 連線失敗！這可能是跨域問題。請檢查：\n1. Google Apps Script 部署設定\n2. 網頁是否在正確的域名上運行\n3. 瀏覽器的 CORS 政策');
-            });
-        };
-        
-        script.src = testUrl;
-        document.head.appendChild(script);
-        
-      } catch (error) {
-        console.error('API 測試錯誤:', error);
-        showError('API 測試發生錯誤：' + error.message);
-      }
-    }
 
     // 載入表單資料
     async function loadFormData() {
@@ -832,15 +781,32 @@
 
     // 控制活動輸入框的顯示/隱藏
     function toggleActivityInput(fieldName) {
-      const inputDiv = document.getElementById(fieldName + 'Input');
+      // 修正 ID 匹配問題
+      let inputDivId;
+      if (fieldName === 'activityHistory') {
+        inputDivId = 'activityHistoryInput';
+      } else if (fieldName === 'cramSchoolStatus') {
+        inputDivId = 'cramSchoolStatusInput';
+      } else if (fieldName === 'clubStatus') {
+        inputDivId = 'clubStatusInput';
+      } else {
+        inputDivId = fieldName + 'Input';
+      }
+      
+      const inputDiv = document.getElementById(inputDivId);
       const radioButtons = document.querySelectorAll(`input[name="${fieldName}"]`);
+      
+      console.log('toggleActivityInput 被調用:', fieldName, 'inputDivId:', inputDivId);
       
       if (inputDiv) {
         // 檢查是否選中「有」（值為 "1.有"）
         const hasValue = Array.from(radioButtons).some(radio => radio.value === '1.有' && radio.checked);
         
+        console.log('hasValue:', hasValue);
+        
         if (hasValue) {
           inputDiv.style.display = 'block';
+          console.log('顯示輸入框:', inputDivId);
         } else {
           inputDiv.style.display = 'none';
           // 清空輸入框內容
@@ -848,7 +814,10 @@
           if (input) {
             input.value = '';
           }
+          console.log('隱藏輸入框:', inputDivId);
         }
+      } else {
+        console.error('找不到輸入框元素:', inputDivId);
       }
     }
 
@@ -1104,11 +1073,6 @@
       }
     }
 
-    // 測試成功訊息顯示
-    function testSuccessMessage() {
-      console.log('測試成功訊息顯示...');
-      showSuccess('這是一個測試成功訊息！');
-    }
 
     // 顯示錯誤訊息
     function showError(message) {
