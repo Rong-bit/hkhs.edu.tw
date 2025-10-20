@@ -789,7 +789,7 @@
         const result = await submitFormData(formData);
         
         if (result.success) {
-          showSuccess(result.message);
+          showSuccess(result.message || '表單提交成功！');
           resetForm();
         } else {
           showError(result.error || '提交失敗，請重試');
@@ -843,7 +843,10 @@
           const getUrl = API_URL + '?' + params.toString();
           
           fetch(getUrl)
-          .then(response => response.text())
+          .then(response => {
+            console.log('GET 請求狀態:', response.status);
+            return response.text();
+          })
           .then(text => {
             console.log('GET 請求回應:', text);
             // 嘗試解析 JSON
@@ -852,9 +855,17 @@
               console.log('GET 提交成功:', result);
               resolve(result);
             } catch (parseError) {
-              console.log('回應不是 JSON，可能是 HTML 頁面');
-              // 如果回應是 HTML，表示可能是錯誤頁面
-              reject(new Error('伺服器回應格式錯誤'));
+              console.log('回應不是 JSON，嘗試其他解析方式');
+              // 檢查是否包含成功訊息
+              if (text.includes('success') || text.includes('成功')) {
+                // 手動創建成功回應
+                const successResult = { success: true, message: '表單提交成功！' };
+                console.log('手動創建成功回應:', successResult);
+                resolve(successResult);
+              } else {
+                console.log('無法解析回應:', text);
+                reject(new Error('伺服器回應格式錯誤: ' + text.substring(0, 100)));
+              }
             }
           })
           .catch(fetchError => {
@@ -974,6 +985,13 @@
       const successDiv = document.getElementById('successMessage');
       successDiv.textContent = message;
       successDiv.classList.add('show');
+      
+      // 3秒後自動隱藏成功訊息
+      setTimeout(() => {
+        successDiv.classList.remove('show');
+      }, 5000);
+      
+      console.log('顯示成功訊息:', message);
     }
 
     // 顯示錯誤訊息
