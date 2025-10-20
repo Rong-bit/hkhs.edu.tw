@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疫調系統 API 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>疫調系統 API 測試工具</h1>
+    
+    <div class="test-section">
+        <h3>1. API 連線測試</h3>
+        <p>測試與 Google Apps Script 後端的連線</p>
+        <button onclick="testConnection()">測試連線</button>
+        <div id="connectionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. 表單 HTML 載入測試</h3>
+        <p>測試獲取表單 HTML 結構</p>
+        <button onclick="testGetForm()">載入表單</button>
+        <div id="formResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. 表單提交測試</h3>
+        <p>測試提交表單資料到後端</p>
+        
+        <input type="text" id="testName" placeholder="姓名" value="測試姓名">
+        <input type="text" id="testId" placeholder="身分證字號" value="A123456789">
+        <input type="text" id="testClass" placeholder="班級" value="一年一班">
+        <input type="date" id="testBirthDate" value="2000-01-01">
+        <input type="number" id="testOnsetMonth" placeholder="發病月份" value="1" min="1" max="12">
+        <input type="number" id="testOnsetDay" placeholder="發病日期" value="1" min="1" max="31">
+        <textarea id="testSymptoms" placeholder="症狀描述">測試症狀</textarea>
+        
+        <button onclick="testSubmit()">提交測試</button>
+        <div id="submitResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. API 設定</h3>
+        <p>設定您的 Google Apps Script API URL：</p>
+        <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" style="width: 100%;">
+        <button onclick="saveApiUrl()">儲存設定</button>
+        <p><small>請將 YOUR_SCRIPT_ID 替換為您的實際 Script ID</small></p>
+    </div>
+
+    <script>
+        // 從 localStorage 載入 API URL
+        let API_URL = localStorage.getItem('apiUrl') || 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        document.getElementById('apiUrl').value = API_URL;
+
+        function saveApiUrl() {
+            API_URL = document.getElementById('apiUrl').value;
+            localStorage.setItem('apiUrl', API_URL);
+            alert('API URL 已儲存');
+        }
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = '<p>測試中...</p>';
+            
+            try {
+                const response = await fetch(API_URL + '?action=getForm');
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success"><p>✅ 連線成功！API 可正常存取</p></div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error"><p>❌ 連線失敗：HTTP ' + response.status + '</p></div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error"><p>❌ 連線錯誤：' + error.message + '</p></div>';
+            }
+        }
+
+        async function testGetForm() {
+            const resultDiv = document.getElementById('formResult');
+            resultDiv.innerHTML = '<p>載入中...</p>';
+            
+            try {
+                const response = await fetch(API_URL + '?action=getForm');
+                const html = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ 表單 HTML 載入成功！</p>
+                            <details>
+                                <summary>查看 HTML 內容</summary>
+                                <pre>${html.substring(0, 500)}...</pre>
+                            </details>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="error"><p>❌ 載入失敗：HTTP ' + response.status + '</p></div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error"><p>❌ 載入錯誤：' + error.message + '</p></div>';
+            }
+        }
+
+        async function testSubmit() {
+            const resultDiv = document.getElementById('submitResult');
+            resultDiv.innerHTML = '<p>提交中...</p>';
+            
+            const testData = {
+                name: document.getElementById('testName').value,
+                id: document.getElementById('testId').value,
+                class: document.getElementById('testClass').value,
+                birthDate: document.getElementById('testBirthDate').value,
+                onsetMonth: document.getElementById('testOnsetMonth').value,
+                onsetDay: document.getElementById('testOnsetDay').value,
+                symptoms: document.getElementById('testSymptoms').value
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <p>✅ 表單提交成功！</p>
+                            <p>回應訊息：${result.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <p>❌ 提交失敗</p>
+                            <p>錯誤：${result.error || '未知錯誤'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error"><p>❌ 提交錯誤：' + error.message + '</p></div>';
+            }
+        }
+
+        // 頁面載入時自動測試連線
+        window.addEventListener('load', function() {
+            if (API_URL !== 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec') {
+                testConnection();
+            }
+        });
+    </script>
+</body>
+</html>

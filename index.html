@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高雄市小港高中發病個案疫調</title>
+  <style>
+    /* 基本樣式 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      padding: 15px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #f5f5f5;
+    }
+
+    /* 表單容器 */
+    .form-container {
+      background-color: white;
+      padding: 0;
+      border-radius: 8px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border: 1px solid rgba(0,0,0,.125);
+    }
+
+    /* 表單標題區域 - 類似投資組合統計卡片 */
+    .form-title {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 15px 20px;
+      margin: 0;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-title h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    /* 載入動畫 */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 表單群組 */
+    .form-group {
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+
+    .form-group:first-of-type {
+      padding-top: 20px;
+    }
+
+    .form-group:last-of-type {
+      padding-bottom: 20px;
+    }
+
+    /* 標籤樣式 */
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .required {
+      color: #dc3545;
+    }
+
+    /* 輸入框樣式 */
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 0;
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    /* 按鈕樣式 */
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #1e7e34;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+
+    /* 按鈕容器 */
+    .button-container {
+      text-align: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* 錯誤訊息樣式 */
+    .error-message {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* 成功訊息樣式 */
+    .success-message {
+      color: #28a745;
+      font-size: 14px;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    /* 響應式設計 */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .form-group {
+        padding: 0 15px;
+      }
+      
+      .button-container {
+        padding: 15px;
+      }
+    }
+
+    /* 隱藏原始表單 */
+    .original-form {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="form-title">
+      <h2>高雄市小港高中發病個案疫調</h2>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>正在載入表單...</p>
+    </div>
+
+    <div id="form-content" style="display: none;">
+      <!-- 表單內容將由 JavaScript 動態載入 -->
+    </div>
+
+    <div class="button-container">
+      <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitForm()">送出表單</button>
+      <button type="button" class="btn btn-secondary" onclick="resetForm()">重設表單</button>
+    </div>
+
+    <div class="success-message" id="successMessage"></div>
+  </div>
+
+  <!-- 隱藏原始表單用於獲取 HTML 結構 -->
+  <div class="original-form" id="originalForm">
+    <!-- 這裡將載入原始表單的 HTML -->
+  </div>
+
+  <script>
+    // Google Apps Script API 端點
+    const API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    
+    // 全域變數
+    let formData = {};
+    let classOptions = [];
+
+    // 頁面載入時初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      loadFormData();
+    });
+
+    // 載入表單資料
+    async function loadFormData() {
+      try {
+        showLoading(true);
+        
+        // 從原始表單載入 HTML 結構
+        const response = await fetch(API_URL + '?action=getForm');
+        const html = await response.text();
+        
+        // 將 HTML 插入到隱藏容器中
+        document.getElementById('originalForm').innerHTML = html;
+        
+        // 提取表單元素
+        extractFormElements();
+        
+        // 顯示表單
+        showLoading(false);
+        document.getElementById('form-content').style.display = 'block';
+        
+      } catch (error) {
+        console.error('載入表單失敗:', error);
+        showError('載入表單失敗，請重新整理頁面');
+        showLoading(false);
+      }
+    }
+
+    // 提取表單元素
+    function extractFormElements() {
+      const originalForm = document.getElementById('originalForm');
+      const formContent = document.getElementById('form-content');
+      
+      // 複製表單群組
+      const formGroups = originalForm.querySelectorAll('.form-group');
+      formGroups.forEach(group => {
+        const clonedGroup = group.cloneNode(true);
+        formContent.appendChild(clonedGroup);
+      });
+      
+      // 初始化表單事件監聽器
+      initializeFormListeners();
+    }
+
+    // 初始化表單事件監聽器
+    function initializeFormListeners() {
+      // 為所有輸入元素添加事件監聽器
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('change', updateFormData);
+        input.addEventListener('input', updateFormData);
+      });
+    }
+
+    // 更新表單資料
+    function updateFormData() {
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        if (input.name) {
+          formData[input.name] = input.value;
+        }
+      });
+    }
+
+    // 提交表單
+    async function submitForm() {
+      try {
+        // 更新表單資料
+        updateFormData();
+        
+        // 驗證表單
+        if (!validateForm()) {
+          return;
+        }
+        
+        showLoading(true);
+        hideMessages();
+        
+        // 發送資料到 Google Apps Script
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showSuccess(result.message);
+          resetForm();
+        } else {
+          showError(result.error || '提交失敗，請重試');
+        }
+        
+      } catch (error) {
+        console.error('提交表單失敗:', error);
+        showError('提交失敗，請檢查網路連線後重試');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // 驗證表單
+    function validateForm() {
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay'];
+      let isValid = true;
+      
+      requiredFields.forEach(fieldName => {
+        const input = document.querySelector(`[name="${fieldName}"]`);
+        if (input && !input.value.trim()) {
+          showFieldError(input, '此欄位為必填');
+          isValid = false;
+        } else if (input) {
+          clearFieldError(input);
+        }
+      });
+      
+      return isValid;
+    }
+
+    // 顯示欄位錯誤
+    function showFieldError(input, message) {
+      clearFieldError(input);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message show';
+      errorDiv.textContent = message;
+      input.parentNode.appendChild(errorDiv);
+    }
+
+    // 清除欄位錯誤
+    function clearFieldError(input) {
+      const existingError = input.parentNode.querySelector('.error-message');
+      if (existingError) {
+        existingError.remove();
+      }
+    }
+
+    // 重設表單
+    function resetForm() {
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.value = '';
+        clearFieldError(input);
+      });
+      formData = {};
+      hideMessages();
+    }
+
+    // 顯示載入狀態
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+      document.getElementById('form-content').style.display = show ? 'none' : 'block';
+      document.getElementById('submitBtn').disabled = show;
+    }
+
+    // 顯示成功訊息
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.classList.add('show');
+    }
+
+    // 顯示錯誤訊息
+    function showError(message) {
+      alert('錯誤：' + message);
+    }
+
+    // 隱藏所有訊息
+    function hideMessages() {
+      document.getElementById('successMessage').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
