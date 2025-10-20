@@ -70,6 +70,24 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* 表單標題 */
+    .form-title {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #007bff;
+    }
+
+    .form-title h2 {
+      color: #007bff;
+      margin-bottom: 5px;
+    }
+
+    .form-title p {
+      color: #666;
+      font-size: 14px;
+    }
+
     /* 表單群組 */
     .form-group {
       margin-bottom: 20px;
@@ -96,6 +114,11 @@
       color: #dc3545;
     }
 
+    .required:after {
+      content: " *";
+      color: #ff4444;
+    }
+
     /* 輸入框樣式 */
     input, select, textarea {
       width: 100%;
@@ -110,6 +133,73 @@
       outline: 0;
       border-color: #007bff;
       box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    /* 複選框群組 */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.5;
+      font-weight: normal;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* 單選按鈕群組 */
+    .radio-group {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.5;
+      font-weight: normal;
+    }
+
+    .radio-group input[type="radio"] {
+      margin-right: 8px;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* 症狀標題 */
+    .symptoms-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    /* 日期輸入群組 */
+    .date-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-input input {
+      width: auto;
+      min-width: 80px;
     }
 
     /* 按鈕樣式 */
@@ -215,6 +305,7 @@
   <div class="form-container">
     <div class="form-title">
       <h2>高雄市小港高中發病個案疫調</h2>
+      <p>114.04.5修正</p>
     </div>
     
     <div class="loading" id="loading">
@@ -257,14 +348,8 @@
       try {
         showLoading(true);
         
-        // 使用 JSONP 方式載入表單 HTML
-        const html = await loadFormHTML();
-        
-        // 將 HTML 插入到隱藏容器中
-        document.getElementById('originalForm').innerHTML = html;
-        
-        // 提取表單元素
-        extractFormElements();
+        // 直接建立表單 HTML，不依賴 JSONP
+        createFormHTML();
         
         // 顯示表單
         showLoading(false);
@@ -277,44 +362,242 @@
       }
     }
 
-    // 使用 JSONP 載入表單 HTML
-    function loadFormHTML() {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'formCallback_' + Date.now();
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(html) {
-          document.head.removeChild(script);
-          delete window[callbackName];
-          resolve(html);
-        };
-        
-        script.onerror = function() {
-          document.head.removeChild(script);
-          delete window[callbackName];
-          reject(new Error('JSONP 載入失敗'));
-        };
-        
-        script.src = API_URL + '?action=getForm&callback=' + callbackName;
-        document.head.appendChild(script);
-      });
-    }
-
-    // 提取表單元素
-    function extractFormElements() {
-      const originalForm = document.getElementById('originalForm');
+    // 直接建立表單 HTML
+    function createFormHTML() {
       const formContent = document.getElementById('form-content');
       
-      // 複製表單群組
-      const formGroups = originalForm.querySelectorAll('.form-group');
-      formGroups.forEach(group => {
-        const clonedGroup = group.cloneNode(true);
-        formContent.appendChild(clonedGroup);
-      });
+      // 生成班級選項（每年級15班）
+      const classOptions = [];
+      for (let grade = 1; grade <= 3; grade++) {
+        for (let classNum = 1; classNum <= 15; classNum++) {
+          const className = `${grade}年${classNum.toString().padStart(2, '0')}班`;
+          classOptions.push(`<option value="${className}">${className}</option>`);
+        }
+      }
+      
+      formContent.innerHTML = `
+        <div class="form-group">
+          <label class="required">姓名</label>
+          <input type="text" name="name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="required">身分證(護照)</label>
+          <div class="input-wrapper">
+            <input type="text" 
+                   name="id" 
+                   id="idInput"
+                   required
+                   placeholder="例：A123456789"
+                   maxlength="10">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="required">出生日期</label>
+          <input type="date" name="birthDate" required>
+        </div>
+
+        <div class="form-group">
+          <label class="required">單位/班級</label>
+          <select name="class" required>
+            <option value="">請選擇班級</option>
+            ${classOptions.join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="required">發病日（症狀出現日）</label>
+          <div class="date-input">
+            <input type="number" name="onsetMonth" id="onsetMonth" min="1" max="12" required placeholder="月"> 月
+            <input type="number" name="onsetDay" id="onsetDay" min="1" max="31" required placeholder="日"> 日
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="symptoms-title">症狀（可複選）</label>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" name="fever" value="true">
+              發燒（耳溫≧38℃）
+            </label>
+            <label>
+              <input type="checkbox" name="muscleAche" value="true">
+              肌肉酸痛
+            </label>
+            <label>
+              <input type="checkbox" name="headache" value="true">
+              頭痛
+            </label>
+            <label>
+              <input type="checkbox" name="fatigue" value="true">
+              極度倦怠感
+            </label>
+            <label>
+              <input type="checkbox" name="cough" value="true">
+              咳嗽
+            </label>
+            <label>
+              <input type="checkbox" name="soreThroat" value="true">
+              喉嚨痛
+            </label>
+            <label>
+              <input type="checkbox" name="shortnessOfBreath" value="true">
+              呼吸急促
+            </label>
+            <label>
+              <input type="checkbox" name="runnyNose" value="true">
+              流鼻涕(不含流鼻水)
+            </label>
+          </div>
+          
+          <div class="form-group other-symptoms">
+            <label>其他症狀</label>
+            <input type="text" name="otherSymptoms" placeholder="請描述其他症狀">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>就醫院所（未就醫寫無）</label>
+          <input type="text" name="hospital" placeholder="請輸入就醫院所">
+        </div>
+
+        <div class="form-group">
+          <label>就醫日期</label>
+          <div class="date-input">
+            <input type="number" name="visitMonth" min="1" max="12" placeholder="月"> 月
+            <input type="number" name="visitDay" min="1" max="31" placeholder="日"> 日
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>醫師診斷</label>
+          <input type="text" name="diagnosis" placeholder="請輸入醫師診斷">
+        </div>
+
+        <div class="form-group">
+          <label>您是否服用流感抗病毒藥劑</label>
+          <select name="fluAntiviral">
+            <option value="">請選擇</option>
+            <option value="是">是</option>
+            <option value="否">否</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>您是否服用新冠抗病毒藥劑</label>
+          <select name="covidAntiviral">
+            <option value="">請選擇</option>
+            <option value="是">是</option>
+            <option value="否">否</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>流感快篩</label>
+          <select name="fluTest">
+            <option value="">請選擇</option>
+            <option value="陽性">陽性</option>
+            <option value="陰性">陰性</option>
+            <option value="未檢測">未檢測</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>新冠快篩</label>
+          <select name="covidTest">
+            <option value="">請選擇</option>
+            <option value="陽性">陽性</option>
+            <option value="陰性">陰性</option>
+            <option value="未檢測">未檢測</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>個案處置</label>
+          <select name="caseManagement">
+            <option value="">請選擇</option>
+            <option value="居家隔離">居家隔離</option>
+            <option value="自主健康管理">自主健康管理</option>
+            <option value="一般就醫">一般就醫</option>
+            <option value="住院治療">住院治療</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>最近一次接種流感疫苗年度,(今年10月至今接種填114，無則免填)</label>
+          <input type="text" name="vaccineYear" placeholder="請輸入3位數字年度" maxlength="3">
+        </div>
+
+        <div class="form-group">
+          <label class="required">發病前1週接觸史(含COVID-19、類流感及上呼吸道感染症狀接觸對象/接觸日期 : )</label>
+          <textarea name="contactHistory" rows="3" required placeholder="例：王小明/3月4日"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>共同活動史</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="commonActivity" value="無">
+              無
+            </label>
+            <label>
+              <input type="radio" name="commonActivity" value="有">
+              有
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>活動能力</label>
+          <select name="activityLevel">
+            <option value="">請選擇</option>
+            <option value="正常">正常</option>
+            <option value="輕微受限">輕微受限</option>
+            <option value="中度受限">中度受限</option>
+            <option value="嚴重受限">嚴重受限</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>補習班</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="cramSchool" value="無">
+              無
+            </label>
+            <label>
+              <input type="radio" name="cramSchool" value="有">
+              有
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>學校社團</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="schoolClub" value="無">
+              無
+            </label>
+            <label>
+              <input type="radio" name="schoolClub" value="有">
+              有
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>聯絡電話</label>
+          <input type="tel" name="phone" placeholder="例：0912345678 或 07-7172930">
+        </div>
+      `;
       
       // 初始化表單事件監聽器
       initializeFormListeners();
     }
+
+    // 此函數已不再需要，因為我們直接建立表單 HTML
 
     // 初始化表單事件監聽器
     function initializeFormListeners() {
@@ -398,7 +681,7 @@
 
     // 驗證表單
     function validateForm() {
-      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay'];
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'contactHistory'];
       let isValid = true;
       
       requiredFields.forEach(fieldName => {
@@ -410,8 +693,48 @@
           clearFieldError(input);
         }
       });
+
+      // 驗證身分證字號
+      const idInput = document.getElementById('idInput');
+      if (idInput && !validateIdInput(idInput)) {
+        showFieldError(idInput, '請輸入正確的身分證字號格式');
+        isValid = false;
+      }
+
+      // 驗證發病日期
+      const onsetMonth = parseInt(document.querySelector('[name="onsetMonth"]').value);
+      const onsetDay = parseInt(document.querySelector('[name="onsetDay"]').value);
+      if (isNaN(onsetMonth) || onsetMonth < 1 || onsetMonth > 12 ||
+          isNaN(onsetDay) || onsetDay < 1 || onsetDay > 31) {
+        showFieldError(document.querySelector('[name="onsetMonth"]'), '請輸入正確的發病日期');
+        isValid = false;
+      }
       
       return isValid;
+    }
+
+    // 身分證字號驗證
+    function validateIdInput(input) {
+      const id = input.value.trim().toUpperCase();
+      
+      // 基本格式檢查
+      if (!/^[A-Z][12][0-9]{8}$/.test(id)) {
+        return false;
+      }
+      
+      // 檢查碼驗證
+      const letters = 'ABCDEFGHJKLMNPQRSTUVXYWZIO';
+      const letterValue = letters.indexOf(id.charAt(0)) + 10;
+      const firstDigit = Math.floor(letterValue / 10);
+      const secondDigit = letterValue % 10;
+      
+      let sum = firstDigit + secondDigit * 9;
+      for (let i = 1; i < 9; i++) {
+        sum += parseInt(id.charAt(i)) * (9 - i);
+      }
+      
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === parseInt(id.charAt(9));
     }
 
     // 顯示欄位錯誤
