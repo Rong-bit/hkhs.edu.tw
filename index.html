@@ -623,16 +623,16 @@
         </div>
 
         <div class="form-group">
-          <label>就醫日期</label>
+          <label class="required">就醫日期</label>
           <div class="date-input">
-            <input type="number" name="visitMonth" min="1" max="12" placeholder="月"> 月
-            <input type="number" name="visitDay" min="1" max="31" placeholder="日"> 日
+            <input type="number" name="visitMonth" min="1" max="12" required placeholder="月"> 月
+            <input type="number" name="visitDay" min="1" max="31" required placeholder="日"> 日
           </div>
         </div>
 
         <div class="form-group">
-          <label>醫師診斷</label>
-          <input type="text" name="diagnosis" placeholder="請輸入醫師診斷">
+          <label class="required">醫師診斷</label>
+          <input type="text" name="diagnosis" required placeholder="請輸入醫師診斷">
         </div>
 
         <div class="form-group">
@@ -667,8 +667,8 @@
         </div>
 
         <div class="form-group">
-          <label>新冠快篩</label>
-          <select name="covidTest">
+          <label class="required">新冠快篩</label>
+          <select name="covidTest" required>
             <option value="">請選擇</option>
             <option value="陽性">陽性</option>
             <option value="陰性">陰性</option>
@@ -677,8 +677,8 @@
         </div>
 
         <div class="form-group">
-          <label>個案處置</label>
-          <select name="treatment">
+          <label class="required">個案處置</label>
+          <select name="treatment" required>
             <option value="">請選擇</option>
             <option value="回家休養">1.回家休養</option>
             <option value="住院">2.住院</option>
@@ -697,7 +697,7 @@
         </div>
 
         <div class="form-group">
-          <label>共同活動史</label>
+          <label class="required">共同活動史</label>
           <div class="radio-group">
             <label>
               <input type="radio" name="activityHistory" value="2.無" onchange="toggleActivityInput('activityHistory')">
@@ -724,7 +724,7 @@
         </div>
 
         <div class="form-group">
-          <label>補習班</label>
+          <label class="required">補習班</label>
           <div class="radio-group">
             <label>
               <input type="radio" name="cramSchoolStatus" value="2.無" onchange="toggleActivityInput('cramSchoolStatus')">
@@ -741,7 +741,7 @@
         </div>
 
         <div class="form-group">
-          <label>學校社團</label>
+          <label class="required">學校社團</label>
           <div class="radio-group">
             <label>
               <input type="radio" name="clubStatus" value="2.無" onchange="toggleActivityInput('clubStatus')">
@@ -758,8 +758,8 @@
         </div>
 
         <div class="form-group">
-          <label>聯絡電話</label>
-          <input type="tel" name="phone" placeholder="例：0912345678 或 07-7172930">
+          <label class="required">聯絡電話</label>
+          <input type="tel" name="phone" required placeholder="例：0912345678 或 07-7172930">
         </div>
       `;
       
@@ -944,7 +944,7 @@
 
     // 驗證表單
     function validateForm() {
-      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine'];
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'visitMonth', 'visitDay', 'diagnosis', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine', 'covidTest', 'treatment', 'activityHistory', 'cramSchoolStatus', 'clubStatus', 'phone'];
       let isValid = true;
       
       requiredFields.forEach(fieldName => {
