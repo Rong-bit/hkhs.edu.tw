@@ -36,18 +36,24 @@
     .form-title {
       background: linear-gradient(135deg, #007bff, #0056b3);
       color: white;
-      padding: 15px 20px;
+      padding: 20px;
       margin: 0;
       border-radius: 8px 8px 0 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      text-align: center;
     }
 
     .form-title h2 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .form-title p {
       margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 500;
+      color: #ffffff;
     }
 
     /* 載入動畫 */
@@ -72,28 +78,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* 表單標題 */
-    .form-title {
-      text-align: center;
-      margin-bottom: 30px;
-      padding: 20px;
-      background: linear-gradient(135deg, #007bff, #0056b3);
-      border-radius: 8px 8px 0 0;
-      color: white;
-    }
-
-    .form-title h2 {
-      color: #ffffff;
-      margin-bottom: 8px;
-      font-size: 24px;
-      font-weight: 700;
-    }
-
-    .form-title p {
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 500;
-    }
+    /* 重複的樣式已移除，使用上方的統一樣式 */
 
     /* 表單群組 */
     .form-group {
@@ -331,12 +316,12 @@
 
       .form-title h2 {
         font-size: 28px;
-        color: #ffffff;
+        color: #ffffff !important;
       }
 
       .form-title p {
         font-size: 18px;
-        color: #ffffff;
+        color: #ffffff !important;
       }
 
       .btn {
