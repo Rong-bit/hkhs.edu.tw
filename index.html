@@ -836,22 +836,29 @@
           document.head.removeChild(script);
           delete window[callbackName];
           
-          // 嘗試使用 fetch 作為備用方案
-          console.log('JSONP 失敗，嘗試使用 fetch...');
-          fetch(API_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-          })
-          .then(response => response.json())
-          .then(result => {
-            console.log('Fetch 提交成功:', result);
-            resolve(result);
+          // 嘗試使用 GET 請求作為備用方案（避免 CORS 問題）
+          console.log('JSONP 失敗，嘗試使用 GET 請求...');
+          const params = new URLSearchParams();
+          params.append('data', JSON.stringify(data));
+          const getUrl = API_URL + '?' + params.toString();
+          
+          fetch(getUrl)
+          .then(response => response.text())
+          .then(text => {
+            console.log('GET 請求回應:', text);
+            // 嘗試解析 JSON
+            try {
+              const result = JSON.parse(text);
+              console.log('GET 提交成功:', result);
+              resolve(result);
+            } catch (parseError) {
+              console.log('回應不是 JSON，可能是 HTML 頁面');
+              // 如果回應是 HTML，表示可能是錯誤頁面
+              reject(new Error('伺服器回應格式錯誤'));
+            }
           })
           .catch(fetchError => {
-            console.error('Fetch 提交也失敗:', fetchError);
+            console.error('GET 請求也失敗:', fetchError);
             reject(new Error('提交失敗，請檢查 Google Apps Script 部署設定或網路連線'));
           });
         };
