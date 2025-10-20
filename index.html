@@ -406,8 +406,8 @@
       try {
         console.log('測試 API 連線...');
         
-        // 測試 JSONP 連線
-        const testUrl = API_URL + '?action=getForm&callback=testCallback';
+        // 測試簡單的 JSONP 連線
+        const testUrl = API_URL + '?callback=testCallback';
         console.log('測試 URL:', testUrl);
         
         // 創建測試腳本
@@ -416,13 +416,14 @@
           console.log('API 連線測試成功:', result);
           document.head.removeChild(script);
           delete window.testCallback;
+          showSuccess('API 連線正常！');
         };
         
         script.onerror = function(error) {
           console.error('API 連線測試失敗:', error);
           document.head.removeChild(script);
           delete window.testCallback;
-          showError('API 連線失敗，請檢查 Google Apps Script 部署設定');
+          showError('API 連線失敗！請檢查以下項目：\n1. Google Apps Script 是否正確部署為網頁應用程式\n2. 存取權限是否設為「任何人」\n3. 網路連線是否正常');
         };
         
         script.src = testUrl;
@@ -430,6 +431,7 @@
         
       } catch (error) {
         console.error('API 測試錯誤:', error);
+        showError('API 測試發生錯誤：' + error.message);
       }
     }
 
