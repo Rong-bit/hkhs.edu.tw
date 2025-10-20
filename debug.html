@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疫調系統診斷工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagnostic-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { 
+            background-color: #6c757d; 
+            cursor: not-allowed; 
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .step-number {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 疫調系統診斷工具</h1>
+    <p>這個工具會幫您逐步診斷和解決 API 連線問題</p>
+
+    <div class="diagnostic-section">
+        <h2>步驟 1: 設定 API URL</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>請輸入您的 Google Apps Script API URL：</strong>
+            <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" style="width: 100%; margin: 10px 0;">
+            <button onclick="saveApiUrl()">儲存 URL</button>
+            <div id="urlStatus"></div>
+        </div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h2>步驟 2: 基本連線測試</h2>
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>測試基本網頁存取：</strong>
+            <button onclick="testBasicAccess()" id="basicTestBtn">測試基本存取</button>
+            <div id="basicResult"></div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>測試 API 端點：</strong>
+            <button onclick="testApiEndpoint()" id="apiTestBtn" disabled>測試 API 端點</button>
+            <div id="apiResult"></div>
+        </div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h2>步驟 3: 詳細診斷</h2>
+        <div class="step">
+            <span class="step-number">4</span>
+            <strong>執行完整診斷：</strong>
+            <button onclick="runFullDiagnostic()" id="diagnosticBtn" disabled>執行診斷</button>
+            <div id="diagnosticResult"></div>
+        </div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h2>步驟 4: 修復建議</h2>
+        <div id="fixSuggestions"></div>
+    </div>
+
+    <div class="diagnostic-section">
+        <h2>步驟 5: 測試表單提交</h2>
+        <div class="step">
+            <span class="step-number">5</span>
+            <strong>測試表單提交功能：</strong>
+            <button onclick="testFormSubmit()" id="submitTestBtn" disabled>測試表單提交</button>
+            <div id="submitResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let API_URL = '';
+        let diagnosticResults = {};
+
+        function saveApiUrl() {
+            API_URL = document.getElementById('apiUrl').value.trim();
+            if (!API_URL) {
+                document.getElementById('urlStatus').innerHTML = '<div class="error">請輸入 API URL</div>';
+                return;
+            }
+            
+            if (!API_URL.includes('script.google.com')) {
+                document.getElementById('urlStatus').innerHTML = '<div class="warning">URL 格式可能不正確，請確認這是 Google Apps Script 的 URL</div>';
+            } else {
+                document.getElementById('urlStatus').innerHTML = '<div class="success">✅ URL 已儲存</div>';
+                document.getElementById('apiTestBtn').disabled = false;
+                document.getElementById('diagnosticBtn').disabled = false;
+                document.getElementById('submitTestBtn').disabled = false;
+            }
+        }
+
+        async function testBasicAccess() {
+            const btn = document.getElementById('basicTestBtn');
+            const resultDiv = document.getElementById('basicResult');
+            
+            btn.disabled = true;
+            btn.textContent = '測試中...';
+            resultDiv.innerHTML = '<div class="info">正在測試基本存取...</div>';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('疫調') || text.includes('表單')) {
+                        resultDiv.innerHTML = '<div class="success">✅ 基本存取成功！可以正常載入疫調表單頁面</div>';
+                        diagnosticResults.basicAccess = true;
+                    } else {
+                        resultDiv.innerHTML = '<div class="warning">⚠️ 連線成功但內容不正確，可能不是疫調系統頁面</div>';
+                        diagnosticResults.basicAccess = false;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ 連線失敗：HTTP ${response.status} ${response.statusText}</div>`;
+                    diagnosticResults.basicAccess = false;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 連線錯誤：${error.message}</div>`;
+                diagnosticResults.basicAccess = false;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '測試基本存取';
+            }
+        }
+
+        async function testApiEndpoint() {
+            const btn = document.getElementById('apiTestBtn');
+            const resultDiv = document.getElementById('apiResult');
+            
+            btn.disabled = true;
+            btn.textContent = '測試中...';
+            resultDiv.innerHTML = '<div class="info">正在測試 API 端點...</div>';
+
+            try {
+                const response = await fetch(API_URL + '?action=getForm', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('form-group') || text.includes('input')) {
+                        resultDiv.innerHTML = '<div class="success">✅ API 端點正常！可以獲取表單 HTML</div>';
+                        diagnosticResults.apiEndpoint = true;
+                    } else {
+                        resultDiv.innerHTML = '<div class="warning">⚠️ API 回應成功但內容格式不正確</div>';
+                        diagnosticResults.apiEndpoint = false;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API 端點失敗：HTTP ${response.status}</div>`;
+                    diagnosticResults.apiEndpoint = false;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ API 端點錯誤：${error.message}</div>`;
+                diagnosticResults.apiEndpoint = false;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '測試 API 端點';
+            }
+        }
+
+        async function runFullDiagnostic() {
+            const btn = document.getElementById('diagnosticBtn');
+            const resultDiv = document.getElementById('diagnosticResult');
+            
+            btn.disabled = true;
+            btn.textContent = '診斷中...';
+            resultDiv.innerHTML = '<div class="info">正在執行完整診斷...</div>';
+
+            const tests = [
+                { name: '基本連線', test: () => fetch(API_URL) },
+                { name: 'API 端點', test: () => fetch(API_URL + '?action=getForm') },
+                { name: 'CORS 設定', test: () => fetch(API_URL, { method: 'OPTIONS' }) }
+            ];
+
+            let results = [];
+            
+            for (const test of tests) {
+                try {
+                    const response = await test.test();
+                    results.push({
+                        name: test.name,
+                        success: response.ok,
+                        status: response.status,
+                        headers: Object.fromEntries(response.headers.entries())
+                    });
+                } catch (error) {
+                    results.push({
+                        name: test.name,
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+
+            // 顯示診斷結果
+            let html = '<h3>診斷結果：</h3>';
+            results.forEach(result => {
+                if (result.success) {
+                    html += `<div class="success">✅ ${result.name}: 正常 (HTTP ${result.status})</div>`;
+                } else {
+                    html += `<div class="error">❌ ${result.name}: ${result.error || '失敗'}</div>`;
+                }
+            });
+
+            resultDiv.innerHTML = html;
+            
+            // 生成修復建議
+            generateFixSuggestions(results);
+            
+            btn.disabled = false;
+            btn.textContent = '執行診斷';
+        }
+
+        function generateFixSuggestions(results) {
+            const suggestionsDiv = document.getElementById('fixSuggestions');
+            let suggestions = '<h3>修復建議：</h3>';
+
+            const basicTest = results.find(r => r.name === '基本連線');
+            const apiTest = results.find(r => r.name === 'API 端點');
+            const corsTest = results.find(r => r.name === 'CORS 設定');
+
+            if (!basicTest || !basicTest.success) {
+                suggestions += `
+                    <div class="error">
+                        <h4>❌ 基本連線問題</h4>
+                        <p><strong>可能原因：</strong></p>
+                        <ul>
+                            <li>Google Apps Script 未正確部署</li>
+                            <li>API URL 不正確</li>
+                            <li>執行權限設定錯誤</li>
+                        </ul>
+                        <p><strong>解決方法：</strong></p>
+                        <ol>
+                            <li>檢查 Google Apps Script 是否已部署為「網頁應用程式」</li>
+                            <li>確認執行權限設定為「任何人」</li>
+                            <li>重新部署並複製新的 URL</li>
+                        </ol>
+                    </div>
+                `;
+            }
+
+            if (!apiTest || !apiTest.success) {
+                suggestions += `
+                    <div class="error">
+                        <h4>❌ API 端點問題</h4>
+                        <p><strong>可能原因：</strong></p>
+                        <ul>
+                            <li>Code.gs 中的 getFormHTML 函數有問題</li>
+                            <li>doGet 函數未正確處理 action 參數</li>
+                        </ul>
+                        <p><strong>解決方法：</strong></p>
+                        <ol>
+                            <li>檢查 Code.gs 中的 doGet 函數</li>
+                            <li>確認 getFormHTML 函數存在且正確</li>
+                            <li>重新部署 Google Apps Script</li>
+                        </ol>
+                    </div>
+                `;
+            }
+
+            if (!corsTest || !corsTest.success) {
+                suggestions += `
+                    <div class="warning">
+                        <h4>⚠️ CORS 設定問題</h4>
+                        <p>這可能導致前端無法正常呼叫 API</p>
+                        <p><strong>解決方法：</strong></p>
+                        <ol>
+                            <li>確認 Code.gs 中已設定 CORS 標頭</li>
+                            <li>檢查 'Access-Control-Allow-Origin': '*' 設定</li>
+                        </ol>
+                    </div>
+                `;
+            }
+
+            if (basicTest && basicTest.success && apiTest && apiTest.success) {
+                suggestions += `
+                    <div class="success">
+                        <h4>✅ 所有測試通過！</h4>
+                        <p>您的 API 設定正常，可以進行表單提交測試。</p>
+                    </div>
+                `;
+            }
+
+            suggestionsDiv.innerHTML = suggestions;
+        }
+
+        async function testFormSubmit() {
+            const btn = document.getElementById('submitTestBtn');
+            const resultDiv = document.getElementById('submitResult');
+            
+            btn.disabled = true;
+            btn.textContent = '測試中...';
+            resultDiv.innerHTML = '<div class="info">正在測試表單提交...</div>';
+
+            const testData = {
+                name: '診斷測試',
+                id: 'A123456789',
+                class: '一年一班',
+                birthDate: '2000-01-01',
+                onsetMonth: '1',
+                onsetDay: '1',
+                symptoms: '診斷測試症狀'
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ 表單提交成功！</h4>
+                            <p>回應訊息：${result.message}</p>
+                            <p>您的疫調系統已完全正常運作！</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ 表單提交失敗</h4>
+                            <p>錯誤：${result.error || '未知錯誤'}</p>
+                            <p>請檢查 Google Apps Script 的 submitForm 函數</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 提交錯誤</h4>
+                        <p>錯誤訊息：${error.message}</p>
+                        <p>請檢查網路連線和 API 設定</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '測試表單提交';
+            }
+        }
+
+        // 頁面載入時檢查是否有儲存的 URL
+        window.addEventListener('load', function() {
+            const savedUrl = localStorage.getItem('apiUrl');
+            if (savedUrl) {
+                document.getElementById('apiUrl').value = savedUrl;
+                API_URL = savedUrl;
+                document.getElementById('apiTestBtn').disabled = false;
+                document.getElementById('diagnosticBtn').disabled = false;
+                document.getElementById('submitTestBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
