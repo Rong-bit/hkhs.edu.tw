@@ -500,7 +500,7 @@
               喉嚨痛
             </label>
             <label>
-              <input type="checkbox" name="shortnessOfBreath" value="true">
+              <input type="checkbox" name="shortBreath" value="true">
               呼吸急促
             </label>
             <label>
@@ -516,8 +516,8 @@
         </div>
 
         <div class="form-group">
-          <label>就醫院所（未就醫寫無）</label>
-          <input type="text" name="hospital" placeholder="請輸入就醫院所">
+          <label class="required">就醫院所（未就醫寫無）</label>
+          <input type="text" name="hospital" required placeholder="請輸入就醫院所">
         </div>
 
         <div class="form-group">
@@ -535,7 +535,7 @@
 
         <div class="form-group">
           <label class="required">流感抗病毒藥劑</label>
-          <select name="fluAntiviral" required>
+          <select name="fluMedicine" required>
             <option value="">請選擇</option>
             <option value="無">無</option>
             <option value="自費">自費</option>
@@ -545,7 +545,7 @@
 
         <div class="form-group">
           <label class="required">新冠抗病毒藥劑</label>
-          <select name="covidAntiviral" required>
+          <select name="covidMedicine" required>
             <option value="">請選擇</option>
             <option value="無">無</option>
             <option value="自費">自費</option>
@@ -576,7 +576,7 @@
 
         <div class="form-group">
           <label>個案處置</label>
-          <select name="caseManagement">
+          <select name="treatment">
             <option value="">請選擇</option>
             <option value="回家休養">1.回家休養</option>
             <option value="住院">2.住院</option>
@@ -598,22 +598,22 @@
           <label>共同活動史</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="commonActivity" value="無" onchange="toggleActivityInput('commonActivity')">
+              <input type="radio" name="activityHistory" value="2.無" onchange="toggleActivityInput('activityHistory')">
               無
             </label>
             <label>
-              <input type="radio" name="commonActivity" value="有" onchange="toggleActivityInput('commonActivity')">
+              <input type="radio" name="activityHistory" value="1.有" onchange="toggleActivityInput('activityHistory')">
               有
             </label>
           </div>
-          <div id="commonActivityInput" class="activity-input" style="display: none;">
-            <input type="text" name="commonActivityDetail" placeholder="請描述共同活動史">
+          <div id="activityHistoryInput" class="activity-input" style="display: none;">
+            <input type="text" name="activityLocation" placeholder="請描述共同活動史">
           </div>
         </div>
 
         <div class="form-group">
           <label class="required">活動能力 </label>
-          <select name="activityLevel" required>
+          <select name="mobility" required>
             <option value="">請選擇</option>
             <option value="自行走動">1.自行走動</option>
             <option value="依靠輪椅">2.依靠輪椅</option>
@@ -625,16 +625,16 @@
           <label>補習班</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="cramSchool" value="無" onchange="toggleActivityInput('cramSchool')">
+              <input type="radio" name="cramSchoolStatus" value="2.無" onchange="toggleActivityInput('cramSchoolStatus')">
               無
             </label>
             <label>
-              <input type="radio" name="cramSchool" value="有" onchange="toggleActivityInput('cramSchool')">
+              <input type="radio" name="cramSchoolStatus" value="1.有" onchange="toggleActivityInput('cramSchoolStatus')">
               有
             </label>
           </div>
-          <div id="cramSchoolInput" class="activity-input" style="display: none;">
-            <input type="text" name="cramSchoolDetail" placeholder="請輸入補習班名稱">
+          <div id="cramSchoolStatusInput" class="activity-input" style="display: none;">
+            <input type="text" name="cramSchoolDetails" placeholder="請輸入補習班名稱">
           </div>
         </div>
 
@@ -642,16 +642,16 @@
           <label>學校社團</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="schoolClub" value="無" onchange="toggleActivityInput('schoolClub')">
+              <input type="radio" name="clubStatus" value="2.無" onchange="toggleActivityInput('clubStatus')">
               無
             </label>
             <label>
-              <input type="radio" name="schoolClub" value="有" onchange="toggleActivityInput('schoolClub')">
+              <input type="radio" name="clubStatus" value="1.有" onchange="toggleActivityInput('clubStatus')">
               有
             </label>
           </div>
-          <div id="schoolClubInput" class="activity-input" style="display: none;">
-            <input type="text" name="schoolClubDetail" placeholder="請輸入社團名稱">
+          <div id="clubStatusInput" class="activity-input" style="display: none;">
+            <input type="text" name="clubDetails" placeholder="請輸入社團名稱">
           </div>
         </div>
 
@@ -683,8 +683,8 @@
       const radioButtons = document.querySelectorAll(`input[name="${fieldName}"]`);
       
       if (inputDiv) {
-        // 檢查是否選中「有」
-        const hasValue = Array.from(radioButtons).some(radio => radio.value === '有' && radio.checked);
+        // 檢查是否選中「有」（值為 "1.有"）
+        const hasValue = Array.from(radioButtons).some(radio => radio.value === '1.有' && radio.checked);
         
         if (hasValue) {
           inputDiv.style.display = 'block';
@@ -771,7 +771,7 @@
 
     // 驗證表單
     function validateForm() {
-      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'contactHistory', 'activityLevel', 'fluTest', 'fluAntiviral', 'covidAntiviral'];
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine'];
       let isValid = true;
       
       requiredFields.forEach(fieldName => {
