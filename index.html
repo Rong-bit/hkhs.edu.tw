@@ -704,7 +704,18 @@
       const inputs = document.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
         if (input.name) {
-          formData[input.name] = input.value;
+          if (input.type === 'checkbox') {
+            // 對於 checkbox，只有選中時才設為 'true'，未選中時設為空字串
+            formData[input.name] = input.checked ? 'true' : '';
+          } else if (input.type === 'radio') {
+            // 對於 radio button，只有選中時才設值
+            if (input.checked) {
+              formData[input.name] = input.value;
+            }
+          } else {
+            // 其他輸入類型直接設值
+            formData[input.name] = input.value;
+          }
         }
       });
     }
@@ -744,28 +755,62 @@
     // 使用 JSONP 提交表單資料
     function submitFormData(data) {
       return new Promise((resolve, reject) => {
-        const callbackName = 'submitCallback_' + Date.now();
-        const script = document.createElement('script');
+        // 首先嘗試使用 fetch API 提交到 doPost 端點
+        const postUrl = API_URL.replace('/exec', '/exec');
         
-        window[callbackName] = function(result) {
-          document.head.removeChild(script);
-          delete window[callbackName];
+        console.log('準備提交資料:', data);
+        console.log('API URL:', postUrl);
+        
+        fetch(postUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => {
+          console.log('收到回應狀態:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP 錯誤: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(result => {
+          console.log('收到回應:', result);
           resolve(result);
-        };
-        
-        script.onerror = function() {
-          document.head.removeChild(script);
-          delete window[callbackName];
-          reject(new Error('JSONP 提交失敗'));
-        };
-        
-        // 將資料編碼為 URL 參數
-        const params = new URLSearchParams();
-        params.append('callback', callbackName);
-        params.append('data', JSON.stringify(data));
-        
-        script.src = API_URL + '?' + params.toString();
-        document.head.appendChild(script);
+        })
+        .catch(error => {
+          console.error('Fetch 提交失敗，嘗試 JSONP:', error);
+          
+          // 如果 fetch 失敗，回退到 JSONP
+          const callbackName = 'submitCallback_' + Date.now();
+          const script = document.createElement('script');
+          
+          window[callbackName] = function(result) {
+            console.log('JSONP 收到回應:', result);
+            document.head.removeChild(script);
+            delete window[callbackName];
+            resolve(result);
+          };
+          
+          script.onerror = function(error) {
+            console.error('JSONP 提交錯誤:', error);
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('JSONP 提交失敗'));
+          };
+          
+          // 將資料編碼為 URL 參數
+          const params = new URLSearchParams();
+          params.append('callback', callbackName);
+          params.append('data', JSON.stringify(data));
+          
+          const fullUrl = API_URL + '?' + params.toString();
+          console.log('完整請求 URL:', fullUrl);
+          
+          script.src = fullUrl;
+          document.head.appendChild(script);
+        });
       });
     }
 
