@@ -617,23 +617,33 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="required">就醫院所（未就醫寫無）</label>
-          <input type="text" name="hospital" required placeholder="請輸入就醫院所">
-        </div>
+         <div class="form-group">
+           <label class="required">就醫院所（未就醫寫無）</label>
+           <input type="text" name="hospital" required placeholder="請輸入就醫院所" onchange="handleHospitalChange(this)">
+         </div>
 
-        <div class="form-group">
-          <label class="required">就醫日期</label>
-          <div class="date-input">
-            <input type="number" name="visitMonth" min="1" max="12" required placeholder="月"> 月
-            <input type="number" name="visitDay" min="1" max="31" required placeholder="日"> 日
-          </div>
-        </div>
+         <div class="form-group">
+           <label class="required">就醫日期</label>
+           <div id="visitDateInput">
+             <div class="date-input">
+               <input type="number" name="visitMonth" min="1" max="12" required placeholder="月"> 月
+               <input type="number" name="visitDay" min="1" max="31" required placeholder="日"> 日
+             </div>
+           </div>
+           <div id="visitDateDisplay" style="display: none; color: #666; font-style: italic;">
+             無
+           </div>
+         </div>
 
-        <div class="form-group">
-          <label class="required">醫師診斷</label>
-          <input type="text" name="diagnosis" required placeholder="請輸入醫師診斷">
-        </div>
+         <div class="form-group">
+           <label class="required">醫師診斷</label>
+           <div id="diagnosisInput">
+             <input type="text" name="diagnosis" required placeholder="請輸入醫師診斷">
+           </div>
+           <div id="diagnosisDisplay" style="display: none; color: #666; font-style: italic;">
+             無
+           </div>
+         </div>
 
         <div class="form-group">
           <label class="required">流感抗病毒藥劑</label>
@@ -944,8 +954,17 @@
 
     // 驗證表單
     function validateForm() {
-      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'visitMonth', 'visitDay', 'diagnosis', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine', 'covidTest', 'treatment', 'activityHistory', 'cramSchoolStatus', 'clubStatus', 'phone'];
+      const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine', 'covidTest', 'treatment', 'activityHistory', 'cramSchoolStatus', 'clubStatus', 'phone'];
       let isValid = true;
+      
+      // 檢查就醫院所，決定是否驗證就醫日期和醫師診斷
+      const hospitalValue = document.querySelector('[name="hospital"]').value.trim();
+      const isNoHospital = hospitalValue === '無' || hospitalValue === '無就醫' || hospitalValue === '未就醫';
+      
+      // 如果就醫院所不是「無」，則需要驗證就醫日期和醫師診斷
+      if (!isNoHospital) {
+        requiredFields.push('visitMonth', 'visitDay', 'diagnosis');
+      }
       
       requiredFields.forEach(fieldName => {
         const input = document.querySelector(`[name="${fieldName}"]`);
@@ -1079,10 +1098,52 @@
       alert('錯誤：' + message);
     }
 
-    // 隱藏所有訊息
-    function hideMessages() {
-      document.getElementById('successMessage').classList.remove('show');
-    }
-  </script>
-</body>
-</html>
+     // 隱藏所有訊息
+     function hideMessages() {
+       document.getElementById('successMessage').classList.remove('show');
+     }
+
+     // 處理就醫院所變更
+     function handleHospitalChange(input) {
+       const hospitalValue = input.value.trim();
+       const visitDateInput = document.getElementById('visitDateInput');
+       const visitDateDisplay = document.getElementById('visitDateDisplay');
+       const diagnosisInput = document.getElementById('diagnosisInput');
+       const diagnosisDisplay = document.getElementById('diagnosisDisplay');
+       
+       if (hospitalValue === '無' || hospitalValue === '無就醫' || hospitalValue === '未就醫') {
+         // 隱藏輸入框，顯示「無」
+         visitDateInput.style.display = 'none';
+         visitDateDisplay.style.display = 'block';
+         diagnosisInput.style.display = 'none';
+         diagnosisDisplay.style.display = 'block';
+         
+         // 自動填入「無」值
+         document.querySelector('[name="visitMonth"]').value = '';
+         document.querySelector('[name="visitDay"]').value = '';
+         document.querySelector('[name="diagnosis"]').value = '';
+         
+         // 移除必填驗證
+         document.querySelector('[name="visitMonth"]').removeAttribute('required');
+         document.querySelector('[name="visitDay"]').removeAttribute('required');
+         document.querySelector('[name="diagnosis"]').removeAttribute('required');
+         
+         console.log('就醫院所為「無」，已自動隱藏就醫日期和醫師診斷輸入框');
+       } else {
+         // 顯示輸入框，隱藏「無」顯示
+         visitDateInput.style.display = 'block';
+         visitDateDisplay.style.display = 'none';
+         diagnosisInput.style.display = 'block';
+         diagnosisDisplay.style.display = 'none';
+         
+         // 恢復必填驗證
+         document.querySelector('[name="visitMonth"]').setAttribute('required', 'required');
+         document.querySelector('[name="visitDay"]').setAttribute('required', 'required');
+         document.querySelector('[name="diagnosis"]').setAttribute('required', 'required');
+         
+         console.log('就醫院所為「' + hospitalValue + '」，已顯示就醫日期和醫師診斷輸入框');
+       }
+     }
+   </script>
+ </body>
+ </html>
