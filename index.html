@@ -285,17 +285,32 @@
     .success-message {
       color: #28a745;
       font-size: 16px;
-      margin-top: 15px;
+      margin: 15px 20px;
       padding: 15px;
       background-color: #d4edda;
       border: 1px solid #c3e6cb;
       border-radius: 6px;
       display: none;
       font-weight: 500;
+      text-align: center;
+      position: relative;
+      z-index: 1000;
     }
 
     .success-message.show {
-      display: block;
+      display: block !important;
+      animation: fadeInSuccess 0.5s ease-in-out;
+    }
+
+    @keyframes fadeInSuccess {
+      from { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
     }
 
     /* 響應式設計 */
@@ -980,18 +995,34 @@
         return;
       }
       
+      // 清除之前的樣式
+      successDiv.classList.remove('show');
+      successDiv.style.display = 'none';
+      
+      // 設定訊息內容
       successDiv.textContent = message;
-      successDiv.classList.add('show');
+      
+      // 強制重新計算樣式
+      successDiv.offsetHeight;
+      
+      // 顯示成功訊息
       successDiv.style.display = 'block';
+      successDiv.classList.add('show');
       
       console.log('成功訊息已設定:', successDiv.textContent);
       console.log('成功訊息樣式:', successDiv.className);
+      console.log('成功訊息位置:', successDiv.getBoundingClientRect());
+      
+      // 滾動到成功訊息位置
+      successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
       
       // 5秒後自動隱藏成功訊息
       setTimeout(() => {
         successDiv.classList.remove('show');
-        successDiv.style.display = 'none';
-        console.log('成功訊息已隱藏');
+        setTimeout(() => {
+          successDiv.style.display = 'none';
+          console.log('成功訊息已隱藏');
+        }, 500); // 等待動畫完成
       }, 5000);
     }
 
