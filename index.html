@@ -198,6 +198,26 @@
       min-width: 80px;
     }
 
+    /* 活動輸入框樣式 */
+    .activity-input {
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .activity-input input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #007bff;
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: #f8f9fa;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* 按鈕樣式 */
     .btn {
       display: inline-block;
@@ -558,10 +578,9 @@
           <label>個案處置</label>
           <select name="caseManagement">
             <option value="">請選擇</option>
-            <option value="居家隔離">居家隔離</option>
-            <option value="自主健康管理">自主健康管理</option>
-            <option value="一般就醫">一般就醫</option>
-            <option value="住院治療">住院治療</option>
+            <option value="回家休養">1.回家休養</option>
+            <option value="住院">2.住院</option>
+            <option value="其他">3.其他</option>
           </select>
         </div>
 
@@ -579,13 +598,16 @@
           <label>共同活動史</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="commonActivity" value="無">
+              <input type="radio" name="commonActivity" value="無" onchange="toggleActivityInput('commonActivity')">
               無
             </label>
             <label>
-              <input type="radio" name="commonActivity" value="有">
+              <input type="radio" name="commonActivity" value="有" onchange="toggleActivityInput('commonActivity')">
               有
             </label>
+          </div>
+          <div id="commonActivityInput" class="activity-input" style="display: none;">
+            <input type="text" name="commonActivityDetail" placeholder="請描述共同活動史">
           </div>
         </div>
 
@@ -603,13 +625,16 @@
           <label>補習班</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="cramSchool" value="無">
+              <input type="radio" name="cramSchool" value="無" onchange="toggleActivityInput('cramSchool')">
               無
             </label>
             <label>
-              <input type="radio" name="cramSchool" value="有">
+              <input type="radio" name="cramSchool" value="有" onchange="toggleActivityInput('cramSchool')">
               有
             </label>
+          </div>
+          <div id="cramSchoolInput" class="activity-input" style="display: none;">
+            <input type="text" name="cramSchoolDetail" placeholder="請輸入補習班名稱">
           </div>
         </div>
 
@@ -617,13 +642,16 @@
           <label>學校社團</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="schoolClub" value="無">
+              <input type="radio" name="schoolClub" value="無" onchange="toggleActivityInput('schoolClub')">
               無
             </label>
             <label>
-              <input type="radio" name="schoolClub" value="有">
+              <input type="radio" name="schoolClub" value="有" onchange="toggleActivityInput('schoolClub')">
               有
             </label>
+          </div>
+          <div id="schoolClubInput" class="activity-input" style="display: none;">
+            <input type="text" name="schoolClubDetail" placeholder="請輸入社團名稱">
           </div>
         </div>
 
@@ -647,6 +675,28 @@
         input.addEventListener('change', updateFormData);
         input.addEventListener('input', updateFormData);
       });
+    }
+
+    // 控制活動輸入框的顯示/隱藏
+    function toggleActivityInput(fieldName) {
+      const inputDiv = document.getElementById(fieldName + 'Input');
+      const radioButtons = document.querySelectorAll(`input[name="${fieldName}"]`);
+      
+      if (inputDiv) {
+        // 檢查是否選中「有」
+        const hasValue = Array.from(radioButtons).some(radio => radio.value === '有' && radio.checked);
+        
+        if (hasValue) {
+          inputDiv.style.display = 'block';
+        } else {
+          inputDiv.style.display = 'none';
+          // 清空輸入框內容
+          const input = inputDiv.querySelector('input');
+          if (input) {
+            input.value = '';
+          }
+        }
+      }
     }
 
     // 更新表單資料
