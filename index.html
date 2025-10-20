@@ -257,9 +257,8 @@
       try {
         showLoading(true);
         
-        // 從原始表單載入 HTML 結構
-        const response = await fetch(API_URL + '?action=getForm');
-        const html = await response.text();
+        // 使用 JSONP 方式載入表單 HTML
+        const html = await loadFormHTML();
         
         // 將 HTML 插入到隱藏容器中
         document.getElementById('originalForm').innerHTML = html;
@@ -276,6 +275,29 @@
         showError('載入表單失敗，請重新整理頁面');
         showLoading(false);
       }
+    }
+
+    // 使用 JSONP 載入表單 HTML
+    function loadFormHTML() {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'formCallback_' + Date.now();
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(html) {
+          document.head.removeChild(script);
+          delete window[callbackName];
+          resolve(html);
+        };
+        
+        script.onerror = function() {
+          document.head.removeChild(script);
+          delete window[callbackName];
+          reject(new Error('JSONP 載入失敗'));
+        };
+        
+        script.src = API_URL + '?action=getForm&callback=' + callbackName;
+        document.head.appendChild(script);
+      });
     }
 
     // 提取表單元素
@@ -328,16 +350,8 @@
         showLoading(true);
         hideMessages();
         
-        // 發送資料到 Google Apps Script
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
+        // 使用 JSONP 方式提交表單
+        const result = await submitFormData(formData);
         
         if (result.success) {
           showSuccess(result.message);
@@ -352,6 +366,34 @@
       } finally {
         showLoading(false);
       }
+    }
+
+    // 使用 JSONP 提交表單資料
+    function submitFormData(data) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'submitCallback_' + Date.now();
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(result) {
+          document.head.removeChild(script);
+          delete window[callbackName];
+          resolve(result);
+        };
+        
+        script.onerror = function() {
+          document.head.removeChild(script);
+          delete window[callbackName];
+          reject(new Error('JSONP 提交失敗'));
+        };
+        
+        // 將資料編碼為 URL 參數
+        const params = new URLSearchParams();
+        params.append('callback', callbackName);
+        params.append('data', JSON.stringify(data));
+        
+        script.src = API_URL + '?' + params.toString();
+        document.head.appendChild(script);
+      });
     }
 
     // 驗證表單
@@ -426,4 +468,3 @@
   </script>
 </body>
 </html>
-
