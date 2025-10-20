@@ -819,7 +819,10 @@
         if (result && result.success) {
           console.log('顯示成功訊息:', result.message || '表單提交成功！');
           showSuccess(result.message || '表單提交成功！');
-          resetForm();
+          // 延遲重設表單，讓成功訊息有時間顯示
+          setTimeout(() => {
+            resetForm();
+          }, 1000);
         } else {
           console.log('顯示錯誤訊息:', result.error || '提交失敗，請重試');
           showError(result.error || '提交失敗，請重試');
@@ -970,7 +973,8 @@
         clearFieldError(input);
       });
       formData = {};
-      hideMessages();
+      // 不隱藏成功訊息，讓它自然消失
+      // hideMessages();
     }
 
     // 顯示載入狀態
