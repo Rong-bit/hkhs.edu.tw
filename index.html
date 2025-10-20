@@ -412,6 +412,8 @@
         
         // 創建測試腳本
         const script = document.createElement('script');
+        script.crossOrigin = 'anonymous';
+        
         window.testCallback = function(result) {
           console.log('API 連線測試成功:', result);
           document.head.removeChild(script);
@@ -423,7 +425,19 @@
           console.error('API 連線測試失敗:', error);
           document.head.removeChild(script);
           delete window.testCallback;
-          showError('API 連線失敗！請檢查以下項目：\n1. Google Apps Script 是否正確部署為網頁應用程式\n2. 存取權限是否設為「任何人」\n3. 網路連線是否正常');
+          
+          // 嘗試使用 fetch 作為備用方案
+          console.log('嘗試使用 fetch 測試...');
+          fetch(API_URL + '?callback=test')
+            .then(response => response.text())
+            .then(data => {
+              console.log('Fetch 測試成功:', data);
+              showSuccess('API 連線正常（使用 fetch）！');
+            })
+            .catch(fetchError => {
+              console.error('Fetch 測試也失敗:', fetchError);
+              showError('API 連線失敗！這可能是跨域問題。請檢查：\n1. Google Apps Script 部署設定\n2. 網頁是否在正確的域名上運行\n3. 瀏覽器的 CORS 政策');
+            });
         };
         
         script.src = testUrl;
@@ -798,6 +812,7 @@
         // 直接使用 JSONP 方式提交
         const callbackName = 'submitCallback_' + Date.now();
         const script = document.createElement('script');
+        script.crossOrigin = 'anonymous';
         
         // 設定超時機制
         const timeout = setTimeout(() => {
@@ -820,7 +835,25 @@
           console.error('JSONP 提交錯誤:', error);
           document.head.removeChild(script);
           delete window[callbackName];
-          reject(new Error('提交失敗，請檢查 Google Apps Script 部署設定或網路連線'));
+          
+          // 嘗試使用 fetch 作為備用方案
+          console.log('JSONP 失敗，嘗試使用 fetch...');
+          fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(result => {
+            console.log('Fetch 提交成功:', result);
+            resolve(result);
+          })
+          .catch(fetchError => {
+            console.error('Fetch 提交也失敗:', fetchError);
+            reject(new Error('提交失敗，請檢查 Google Apps Script 部署設定或網路連線'));
+          });
         };
         
         // 將資料編碼為 URL 參數
