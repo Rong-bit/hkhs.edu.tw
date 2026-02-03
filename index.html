@@ -900,43 +900,41 @@
       }
     }
 
-    // 使用 POST 請求提交表單資料（JSON  body），後端需用 doPost 並寫入試算表
+    // 使用「表單 POST + 隱藏 iframe」送出，避免 CORS 阻擋（從 GitHub Pages 呼叫 Google Apps Script 時常見）
+    // Google Apps Script 端 doPost(e) 需從 e.parameter.data 讀取 JSON 字串並解析
     function submitFormData(data) {
       return new Promise((resolve, reject) => {
         console.log('準備提交資料:', data);
         console.log('API URL:', API_URL);
         
-        console.log('使用 POST 請求提交表單...');
-        fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        })
-        .then(response => {
-          console.log('POST 請求狀態:', response.status);
-          return response.text();
-        })
-        .then(text => {
-          if (text === undefined) return;
-          console.log('POST 請求回應:', text);
-          try {
-            const result = JSON.parse(text);
-            console.log('POST 提交成功:', result);
-            resolve(result);
-          } catch (parseError) {
-            if (text.includes('success') || text.includes('成功') || text.includes('提交成功')) {
-              resolve({ success: true, message: '表單提交成功！' });
-            } else if (text.includes('error') || text.includes('錯誤') || text.includes('失敗')) {
-              resolve({ success: false, error: '伺服器處理錯誤' });
-            } else {
-              resolve({ success: true, message: '表單已送出，請至試算表確認。' });
-            }
-          }
-        })
-        .catch(fetchError => {
-          console.error('POST 請求失敗:', fetchError);
-          reject(new Error('提交失敗，請檢查 Google Apps Script 部署設定或網路連線'));
-        });
+        let iframe = document.getElementById('form-submit-iframe');
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.name = 'form-submit-iframe';
+          iframe.id = 'form-submit-iframe';
+          iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+          document.body.appendChild(iframe);
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = API_URL;
+        form.target = 'form-submit-iframe';
+        form.style.visibility = 'hidden';
+
+        const input = document.createElement('input');
+        input.name = 'data';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+        document.body.appendChild(form);
+
+        console.log('使用表單 POST 提交（避開 CORS）...');
+        form.submit();
+
+        setTimeout(() => {
+          document.body.removeChild(form);
+          resolve({ success: true, message: '表單已送出，請至試算表確認。' });
+        }, 1500);
       });
     }
 
