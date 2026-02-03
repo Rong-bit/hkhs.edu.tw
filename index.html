@@ -900,55 +900,41 @@
       }
     }
 
-    // 使用 GET 請求提交表單資料（避免重複提交）
+    // 使用 POST 請求提交表單資料（JSON  body），後端需用 doPost 並寫入試算表
     function submitFormData(data) {
       return new Promise((resolve, reject) => {
         console.log('準備提交資料:', data);
         console.log('API URL:', API_URL);
         
-        // 直接使用 GET 請求提交（避免重複提交問題）
-        console.log('使用 GET 請求提交表單...');
-        const params = new URLSearchParams();
-        params.append('data', JSON.stringify(data));
-        const getUrl = API_URL + '?' + params.toString();
-        
-        fetch(getUrl)
+        console.log('使用 POST 請求提交表單...');
+        fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        })
         .then(response => {
-          console.log('GET 請求狀態:', response.status);
+          console.log('POST 請求狀態:', response.status);
           return response.text();
         })
         .then(text => {
-          console.log('GET 請求回應:', text);
-          // 嘗試解析 JSON
+          if (text === undefined) return;
+          console.log('POST 請求回應:', text);
           try {
             const result = JSON.parse(text);
-            console.log('GET 提交成功:', result);
+            console.log('POST 提交成功:', result);
             resolve(result);
           } catch (parseError) {
-            console.log('回應不是 JSON，嘗試其他解析方式');
-            console.log('原始回應內容:', text);
-            
-            // 檢查是否包含成功訊息或錯誤訊息
             if (text.includes('success') || text.includes('成功') || text.includes('提交成功')) {
-              // 手動創建成功回應
-              const successResult = { success: true, message: '表單提交成功！' };
-              console.log('手動創建成功回應:', successResult);
-              resolve(successResult);
+              resolve({ success: true, message: '表單提交成功！' });
             } else if (text.includes('error') || text.includes('錯誤') || text.includes('失敗')) {
-              // 手動創建錯誤回應
-              const errorResult = { success: false, error: '伺服器處理錯誤' };
-              console.log('手動創建錯誤回應:', errorResult);
-              resolve(errorResult);
+              resolve({ success: false, error: '伺服器處理錯誤' });
             } else {
-              // 如果回應看起來像是 HTML 頁面，可能是成功但格式不正確
-              console.log('回應可能是 HTML 頁面，假設提交成功');
-              const successResult = { success: true, message: '表單提交成功！' };
-              resolve(successResult);
+              resolve({ success: true, message: '表單已送出，請至試算表確認。' });
             }
           }
         })
         .catch(fetchError => {
-          console.error('GET 請求失敗:', fetchError);
+          console.error('POST 請求失敗:', fetchError);
           reject(new Error('提交失敗，請檢查 Google Apps Script 部署設定或網路連線'));
         });
       });
