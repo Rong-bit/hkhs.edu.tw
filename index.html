@@ -900,12 +900,14 @@
       }
     }
 
-    // 使用「表單 POST + 隱藏 iframe」送出，避免 CORS 阻擋（從 GitHub Pages 呼叫 Google Apps Script 時常見）
-    // Google Apps Script 端 doPost(e) 需從 e.parameter.data 讀取 JSON 字串並解析
+    // 【重要】必須使用「表單 POST + 隱藏 iframe」，不可改用 fetch()。
+    // 從 GitHub Pages (rong-bit.github.io) 用 fetch POST 到 script.google.com 會觸發 CORS，瀏覽器會擋下。
+    // 表單 POST 到 iframe 不會觸發 CORS。後端 doPost(e) 從 e.parameter.data 讀取 JSON。
     function submitFormData(data) {
       return new Promise((resolve, reject) => {
         console.log('準備提交資料:', data);
         console.log('API URL:', API_URL);
+        console.log('使用表單 POST + iframe 送出（避開 CORS），非 fetch');
         
         let iframe = document.getElementById('form-submit-iframe');
         if (!iframe) {
