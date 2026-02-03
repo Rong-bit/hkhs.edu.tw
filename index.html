@@ -956,11 +956,19 @@
 
     // 驗證表單
     function validateForm() {
+      // 只在 #form-content 內查詢，避免取到錯誤元素或 null 導致拋錯
+      const formContent = document.getElementById('form-content');
+      if (!formContent) {
+        alert('錯誤：表單尚未載入，請重新整理頁面後再試。');
+        return false;
+      }
+
       const requiredFields = ['name', 'id', 'class', 'birthDate', 'onsetMonth', 'onsetDay', 'hospital', 'contactHistory', 'mobility', 'fluTest', 'fluMedicine', 'covidMedicine', 'covidTest', 'treatment', 'activityHistory', 'cramSchoolStatus', 'clubStatus', 'phone'];
       let isValid = true;
       
-      // 檢查就醫院所，決定是否驗證就醫日期和醫師診斷
-      const hospitalValue = document.querySelector('[name="hospital"]').value.trim();
+      // 檢查就醫院所，決定是否驗證就醫日期和醫師診斷（加上 null 檢查避免拋錯）
+      const hospitalInput = formContent.querySelector('[name="hospital"]');
+      const hospitalValue = hospitalInput ? hospitalInput.value.trim() : '';
       const isNoHospital = hospitalValue === '無' || hospitalValue === '無就醫' || hospitalValue === '未就醫';
       
       // 如果就醫院所不是「無」，則需要驗證就醫日期和醫師診斷
@@ -969,28 +977,41 @@
       }
       
       requiredFields.forEach(fieldName => {
-        const input = document.querySelector(`[name="${fieldName}"]`);
-        if (input && !input.value.trim()) {
+        const input = formContent.querySelector(`[name="${fieldName}"]`);
+        if (!input) return;
+        // 單選（radio）：必須有其中一個被選取
+        if (input.type === 'radio') {
+          const checked = formContent.querySelector(`[name="${fieldName}"]:checked`);
+          if (!checked) {
+            showFieldError(input, '此欄位為必填');
+            isValid = false;
+          } else {
+            clearFieldError(input);
+          }
+        } else if (!input.value.trim()) {
           showFieldError(input, '此欄位為必填');
           isValid = false;
-        } else if (input) {
+        } else {
           clearFieldError(input);
         }
       });
 
       // 驗證身分證字號
-      const idInput = document.getElementById('idInput');
-      if (idInput && !validateIdInput(idInput)) {
-        showFieldError(idInput, '請輸入正確的身分證字號格式');
+      const idEl = formContent.querySelector('#idInput') || document.getElementById('idInput');
+      if (idEl && !validateIdInput(idEl)) {
+        showFieldError(idEl, '請輸入正確的身分證字號格式');
         isValid = false;
       }
 
-      // 驗證發病日期
-      const onsetMonth = parseInt(document.querySelector('[name="onsetMonth"]').value);
-      const onsetDay = parseInt(document.querySelector('[name="onsetDay"]').value);
+      // 驗證發病日期（加上 null 檢查）
+      const onsetMonthEl = formContent.querySelector('[name="onsetMonth"]');
+      const onsetDayEl = formContent.querySelector('[name="onsetDay"]');
+      const onsetMonth = onsetMonthEl ? parseInt(onsetMonthEl.value, 10) : NaN;
+      const onsetDay = onsetDayEl ? parseInt(onsetDayEl.value, 10) : NaN;
       if (isNaN(onsetMonth) || onsetMonth < 1 || onsetMonth > 12 ||
           isNaN(onsetDay) || onsetDay < 1 || onsetDay > 31) {
-        showFieldError(document.querySelector('[name="onsetMonth"]'), '請輸入正確的發病日期');
+        const target = onsetMonthEl || formContent.querySelector('[name="onsetDay"]');
+        if (target) showFieldError(target, '請輸入正確的發病日期');
         isValid = false;
       }
       
